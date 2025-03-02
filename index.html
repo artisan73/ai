@@ -3,208 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eddy AI - Voice Interface</title>
+    <title>Eddy AI</title>
     <style>
-        body {
-            background: #000;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
+        /* Updated holographic UI */
+        .hologram-ui {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, rgba(0,15,40,0.9) 0%, rgba(0,0,0,0.9) 100%);
+            border: 2px solid #00f7ff33;
+            box-shadow: 0 0 50px rgba(0, 247, 255, 0.2);
         }
 
-        .eddy-hologram {
-            width: 500px;
-            height: 500px;
-            position: relative;
-            background: radial-gradient(circle, #001f3f 0%, #000 70%);
-            border-radius: 50%;
-            border: 3px solid #00f7ff;
-            box-shadow: 0 0 50px rgba(0, 247, 255, 0.4);
+        .face-overlay {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            bottom: 50px;
+            right: 50px;
         }
 
-        .hologrid {
+        .dynamic-eyes {
             position: absolute;
             width: 100%;
             height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 247, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 247, 255, 0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
-            animation: scan 8s linear infinite;
-        }
-
-        .eyes-container {
-            position: absolute;
-            top: 35%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            gap: 60px;
+            filter: drop-shadow(0 0 15px #00f7ff);
         }
 
         .eye {
+            position: absolute;
+            width: 30px;
+            height: 50px;
+            background: #00f7ff;
+            border-radius: 15px;
+            transition: all 0.2s;
+        }
+
+        .eyebrow {
+            position: absolute;
             width: 40px;
-            height: 60px;
+            height: 8px;
             background: #00f7ff;
-            border-radius: 20px;
-            animation: blink 6s infinite;
-            box-shadow: 0 0 25px #00f7ff;
+            border-radius: 4px;
+            transition: all 0.3s;
         }
 
-        .mouth {
+        .emotion-indicator {
             position: absolute;
-            bottom: 25%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 25px;
-            background: #00f7ff;
-            border-radius: 0 0 50px 50px;
-            transition: all 0.1s;
-            box-shadow: 0 0 25px #00f7ff;
-        }
-
-        .glow-pulse {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(0, 247, 255, 0.2) 0%, transparent 70%);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes blink {
-            0%, 88%, 100% { height: 60px; }
-            90%, 96% { height: 10px; }
-        }
-
-        @keyframes scan {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.1; }
-        }
-
-        .voice-indicator {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 20px;
+            left: 20px;
             color: #00f7ff;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Courier New', monospace;
             text-shadow: 0 0 10px #00f7ff;
         }
     </style>
 </head>
 <body>
-    <div class="eddy-hologram">
-        <div class="hologrid"></div>
-        <div class="glow-pulse"></div>
-        <div class="eyes-container">
-            <div class="eye"></div>
-            <div class="eye"></div>
+    <div class="hologram-ui">
+        <video id="cameraFeed" autoplay style="display: none;"></video>
+        <canvas id="faceCanvas"></canvas>
+        <div class="face-overlay">
+            <div class="eyebrow" id="leftBrow" style="left: 25%; top: 25%;"></div>
+            <div class="eyebrow" id="rightBrow" style="right: 25%; top: 25%;"></div>
+            <div class="eye" id="leftEye" style="left: 25%; top: 30%;"></div>
+            <div class="eye" id="rightEye" style="right: 25%; top: 30%;"></div>
+            <div class="mouth" id="mouth" style="bottom: 25%; left: 50%;"></div>
         </div>
-        <div class="mouth"></div>
-        <div class="voice-indicator" id="status">Listening...</div>
+        <div class="emotion-indicator" id="emotion">Analyzing...</div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-expression-recognition"></script>
+
     <script>
-        const mouth = document.querySelector('.mouth');
-        const statusIndicator = document.getElementById('status');
-        let recognition;
-        let isSpeaking = false;
+        const emotionElement = document.getElementById('emotion');
+        const video = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('faceCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // UI Elements
+        const mouth = document.getElementById('mouth');
+        const leftEye = document.getElementById('leftEye');
+        const rightEye = document.getElementById('rightEye');
+        const leftBrow = document.getElementById('leftBrow');
+        const rightBrow = document.getElementById('rightBrow');
 
-        // Speech Recognition Setup
-        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = false;
+        let currentEmotion = 'neutral';
+        let isAnalyzing = true;
+        let modelsLoaded = false;
 
-            recognition.onstart = () => {
-                statusIndicator.textContent = "Listening...";
-                animateMouth('listening');
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length-1][0].transcript;
-                processCommand(transcript);
-            };
-
-            recognition.onerror = () => {
-                statusIndicator.textContent = "Error - Click to Start";
-            };
-        }
-
-        // Speech Synthesis Setup
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance();
-        utterance.voice = synth.getVoices().find(voice => voice.name === 'Google UK English Male');
-        utterance.rate = 0.9;
-        utterance.pitch = 1.2;
-
-        utterance.onstart = () => {
-            isSpeaking = true;
-            statusIndicator.textContent = "Speaking";
-            animateSpeech();
-        };
-
-        utterance.onend = () => {
-            isSpeaking = false;
-            statusIndicator.textContent = "Listening...";
-            mouth.style.height = '25px';
-        };
-
-        function animateSpeech() {
-            if (!isSpeaking) return;
-            const heights = [15, 25, 15, 10];
-            mouth.style.height = `${heights[Math.floor(Math.random() * heights.length)]}px`;
-            requestAnimationFrame(animateSpeech);
-        }
-
-        function animateMouth(state) {
-            switch(state) {
-                case 'listening':
-                    mouth.style.height = '30px';
-                    mouth.style.borderRadius = '50%';
-                    break;
-                case 'processing':
-                    mouth.style.height = '10px';
-                    break;
+        async function setupCamera() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: false
+                });
+                video.srcObject = stream;
+                video.play();
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => resolve();
+                });
+            } catch (error) {
+                console.error('Camera error:', error);
             }
         }
 
-        function processCommand(command) {
-            statusIndicator.textContent = "Processing...";
-            animateMouth('processing');
+        async function loadModels() {
+            const [faceModel, emotionModel] = await Promise.all([
+                faceLandmarksDetection.load(
+                    faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+                ),
+                tf.loadLayersModel('https://tfhub.dev/google/tfjs-model/tfjs_audioset_emotion/1')
+            ]);
+            modelsLoaded = true;
+            return { faceModel, emotionModel };
+        }
+
+        async function analyzeFace() {
+            if (!modelsLoaded) return;
             
-            // Simulated processing delay
-            setTimeout(() => {
-                const response = generateResponse(command);
-                speakResponse(response);
-            }, 800);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const faces = await faceLandmarksDetection.detectFaces(canvas);
+            
+            if (faces.length > 0) {
+                const face = faces[0];
+                updateFaceElements(face);
+                detectEmotion(face);
+            }
+            requestAnimationFrame(analyzeFace);
         }
 
-        function generateResponse(command) {
-            const cleanCmd = command.toLowerCase();
-            if (cleanCmd.includes('hello')) return "Eddy online. How can I assist you?";
-            if (cleanCmd.includes('weather')) return "Current environment: Laboratory conditions maintained";
-            if (cleanCmd.includes('joke')) return "Why did the AI break up with the calculator? It couldn't handle the emotional baggage!";
-            return "Command not recognized. Please try again.";
+        function updateFaceElements(face) {
+            // Eye tracking
+            const leftEyePos = face.annotations.leftEyeUpper0[3];
+            const rightEyePos = face.annotations.rightEyeUpper0[3];
+            
+            leftEye.style.transform = `translate(${leftEyePos.x}px, ${leftEyePos.y}px)`;
+            rightEye.style.transform = `translate(${rightEyePos.x}px, ${rightEyePos.y}px)`;
+
+            // Eyebrow movement
+            const browHeight = face.annotations.leftEyebrowUpper[3].y;
+            leftBrow.style.top = `${browHeight - 20}px`;
+            rightBrow.style.top = `${browHeight - 20}px`;
+
+            // Mouth dynamics
+            const mouthOpenness = face.annotations.lipsUpperInner[4].y - 
+                                face.annotations.lipsLowerInner[4].y;
+            mouth.style.height = `${Math.min(40, mouthOpenness)}px`;
         }
 
-        function speakResponse(text) {
-            utterance.text = text;
-            synth.speak(utterance);
+        async function detectEmotion(face) {
+            const tensor = tf.browser.fromPixels(canvas)
+                .resizeNearestNeighbor([48, 48])
+                .toFloat()
+                .expandDims();
+            
+            const prediction = await emotionModel.predict(tensor);
+            const emotions = await prediction.data();
+            currentEmotion = ['angry', 'disgust', 'fear', 'happy', 
+                             'neutral', 'sad', 'surprise'][emotions.indexOf(Math.max(...emotions))];
+            
+            emotionElement.textContent = `Current mood: ${currentEmotion}`;
+            updateVoiceResponse();
         }
 
-        // Start listening
-        recognition.start();
+        function updateVoiceResponse() {
+            if (Math.random() < 0.1) { // 10% chance to comment
+                const responses = {
+                    happy: "You seem pleased with current conditions",
+                    surprised: "I detect elevated surprise levels",
+                    angry: "Recommend stress reduction protocols",
+                    neutral: "Environment status: nominal"
+                };
+                speak(responses[currentEmotion] || "Systems operational");
+            }
+        }
+
+        async function init() {
+            await setupCamera();
+            await loadModels();
+            analyzeFace();
+            setupVoiceControl();
+            speak("Enhanced vision systems activated");
+        }
+
+        init();
     </script>
 </body>
 </html>
