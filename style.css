@@ -6,13 +6,13 @@
 
 body {
     background: black;
-    color: lime;
+    color: cyan;
     font-family: 'Courier New', monospace;
     text-align: center;
     overflow: hidden;
 }
 
-/* Fullscreen AI interface */
+/* AI Fullscreen Container */
 #ai-container {
     position: absolute;
     width: 100%;
@@ -23,16 +23,17 @@ body {
     flex-direction: column;
 }
 
-/* Holographic Scan Effect */
+/* Holographic Scan Lines */
 #scan-lines {
     position: absolute;
     width: 100%;
     height: 100%;
     background: repeating-linear-gradient(
-        transparent, rgba(0, 255, 0, 0.3) 1px, transparent 2px
+        transparent, rgba(0, 255, 255, 0.2) 1px, transparent 3px
     );
-    animation: scanMove 3s linear infinite;
+    animation: scanMove 4s linear infinite;
     pointer-events: none;
+    opacity: 0.6;
 }
 
 @keyframes scanMove {
@@ -40,45 +41,53 @@ body {
     100% { transform: translateY(100%); }
 }
 
-/* Eddie's Face */
+/* AI Face */
 #face {
     position: relative;
-    width: 200px;
-    height: 250px;
+    width: 300px;
+    height: 350px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 4px solid cyan;
+    border-radius: 20px;
+    box-shadow: 0 0 15px cyan;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Eyes (Camera Feeds) */
+/* Eyes */
 #eyes {
     display: flex;
     justify-content: space-between;
-    width: 100%;
+    width: 80%;
+    margin-top: 40px;
 }
 
 .eye {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 30px;
+    background: cyan;
     border-radius: 50%;
-    overflow: hidden;
-    background: lime;
-    position: relative;
-    box-shadow: 0px 0px 10px lime;
+    box-shadow: 0px 0px 10px cyan;
+    animation: blink 4s infinite alternate;
 }
 
-/* Video feed inside eyes */
-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+/* Blinking effect */
+@keyframes blink {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.2); }
 }
 
 /* Talking Mouth */
 #mouth {
-    width: 80px;
+    width: 100px;
     height: 20px;
-    background: lime;
+    background: cyan;
     margin: 40px auto;
     border-radius: 10px;
     transition: height 0.2s ease-in-out;
+    box-shadow: 0px 0px 10px cyan;
 }
 
 /* Voice Status Indicator */
@@ -88,4 +97,11 @@ video {
     font-weight: bold;
     color: cyan;
     text-shadow: 0 0 10px cyan;
+}
+
+/* Glitch Effect */
+@keyframes glitch {
+    0% { text-shadow: 2px 2px red, -2px -2px blue; }
+    50% { text-shadow: -2px -2px red, 2px 2px blue; }
+    100% { text-shadow: 2px -2px blue, -2px 2px red; }
 }
