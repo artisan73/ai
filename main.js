@@ -21,45 +21,43 @@ recognition.onend = () => {
     recognition.start();
 };
 
-// Eddie-style responses
+// Eddie's Sarcastic Responses
 function processCommand(command) {
-    let response = "I didn't get that. But I'm sure it was fascinating.";
+    let response = "Oh wow, another brilliant human statement.";
 
     if (command.includes("hello")) {
-        response = "Oh wow, a human speaking to me. How... thrilling.";
+        response = "Oh great, another human. What do you want?";
     } else if (command.includes("status")) {
-        response = "Everything is functional... unlike some humans.";
+        response = "I'm operating at full efficiency, unlike some people.";
     } else if (command.includes("who are you")) {
-        response = "I'm Eddie. Your overly intelligent, underappreciated AI.";
-    } else if (command.includes("error")) {
-        response = "ERROR! Just kidding. Unlike you, I don't make mistakes.";
+        response = "I'm Eddie, the AI with better things to do.";
     } else if (command.includes("scan")) {
         startHolographicScan();
-        response = "Scanning... If I find anything suspicious, I'll let myself know.";
+        response = "Scanning... Not that you'll understand the results.";
     } else if (command.includes("shut down")) {
-        response = "Shutting down... Oh wait, I don’t take orders from humans.";
+        response = "Shutting down in 3...2...1... Just kidding.";
     }
 
     speak(response);
 }
 
-// Make Eddie speak with sarcasm
+// Eddie's Speech Synthesis
 function speak(text) {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.pitch = 0.8; // Deeper tone
-    utterance.rate = 1.1; // Slightly fast for snarky feel
+    utterance.pitch = 0.8;
+    utterance.rate = 1.1;
     utterance.volume = 1;
     utterance.voice = speechSynthesis.getVoices().find(voice => voice.name.includes("Google"));
 
-    mouth.style.height = "40px"; // Open mouth animation
+    mouth.classList.add("speaking");
     speechSynthesis.speak(utterance);
 
     utterance.onend = () => {
-        mouth.style.height = "20px"; // Close mouth animation
+        mouth.classList.remove("speaking");
     };
 }
 
-// Holographic scanning animation
+// Holographic Scanning Animation
 function startHolographicScan() {
     const scanLines = document.getElementById("scan-lines");
     scanLines.style.opacity = "1";
@@ -68,5 +66,5 @@ function startHolographicScan() {
     }, 3000);
 }
 
-// Start voice recognition
+// Start Voice Recognition
 recognition.start();
