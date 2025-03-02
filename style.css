@@ -2,151 +2,90 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-  }
-  
-  body {
-    background: #000;
-    color: #fff;
-    font-family: 'Arial', sans-serif;
-    min-height: 100vh;
+}
+
+body {
+    background: black;
+    color: lime;
+    font-family: 'Courier New', monospace;
+    text-align: center;
     overflow: hidden;
-  }
-  
-  #animation-background {
-    position: fixed;
-    top: 0;
-    left: 0;
+}
+
+/* Fullscreen AI interface */
+#ai-container {
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+/* Holographic Scan Effect */
+#scan-lines {
+    position: absolute;
     width: 100%;
     height: 100%;
-    z-index: -1;
-  }
-  
-  .alexa-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    perspective: 1000px;
-  }
-  
-  .alexa-ring {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
+    background: repeating-linear-gradient(
+        transparent, rgba(0, 255, 0, 0.3) 1px, transparent 2px
+    );
+    animation: scanMove 3s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scanMove {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+
+/* Eddie's Face */
+#face {
     position: relative;
-    transform-style: preserve-3d;
-    animation: float 6s ease-in-out infinite;
-    transition: all 0.5s ease;
-  }
-  
-  .alexa-ring::before {
-    content: '';
-    position: absolute;
+    width: 200px;
+    height: 250px;
+}
+
+/* Eyes (Camera Feeds) */
+#eyes {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.eye {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: lime;
+    position: relative;
+    box-shadow: 0px 0px 10px lime;
+}
+
+/* Video feed inside eyes */
+video {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
-    border: 5px solid #00a2ff;
-    box-shadow: 0 0 50px #00a2ff;
-    animation: pulse 2s linear infinite;
-    transition: all 0.5s ease;
-  }
-  
-  .alexa-core {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle at center, #00a2ff, #0066cc);
-    border-radius: 50%;
-    box-shadow: 0 0 30px #00a2ff;
-    transition: all 0.5s ease;
-  }
-  
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0) rotateX(0) rotateY(0);
-    }
-    50% {
-      transform: translateY(-20px) rotateX(10deg) rotateY(20deg);
-    }
-  }
-  
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-      opacity: 0.8;
-    }
-    50% {
-      transform: scale(1.1);
-      opacity: 0.5;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 0.8;
-    }
-  }
-  
-  @keyframes pulse-green {
-    0% {
-      transform: scale(1);
-      opacity: 0.8;
-    }
-    50% {
-      transform: scale(1.2);
-      opacity: 0.5;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 0.8;
-    }
-  }
-  
-  @keyframes ripple {
-    0% {
-      width: 0px;
-      height: 0px;
-      opacity: 1;
-    }
-    100% {
-      width: 300px;
-      height: 300px;
-      opacity: 0;
-    }
-  }
-  
-  @keyframes fadeInOut {
-    0% {
-      opacity: 0;
-      transform: translateY(20px) translateX(-50%) scale(0.8);
-    }
-    20% {
-      opacity: 1;
-      transform: translateY(0) translateX(-50%) scale(1);
-    }
-    80% {
-      opacity: 1;
-      transform: translateY(0) translateX(-50%) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-20px) translateX(-50%) scale(0.8);
-    }
-  }
-  
-  @keyframes search-appear {
-    0% {
-      opacity: 0;
-      transform: translateX(-50%) scale(0.8) rotateX(-30deg);
-    }
-    100% {
-      opacity: 1;
-      transform: translateX(-50%) scale(1) rotateX(0deg);
-    }
-  }
+    object-fit: cover;
+}
 
+/* Talking Mouth */
+#mouth {
+    width: 80px;
+    height: 20px;
+    background: lime;
+    margin: 40px auto;
+    border-radius: 10px;
+    transition: height 0.2s ease-in-out;
+}
 
-                                         
-                                         
-            
+/* Voice Status Indicator */
+#status-indicator {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: cyan;
+    text-shadow: 0 0 10px cyan;
+}
