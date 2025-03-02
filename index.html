@@ -3,213 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Rats-style Chatbot</title>
+    <title>Eddy AI</title>
     <style>
         body {
+            background: #000;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
-            background: #2c3e50;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
         }
 
-        .chat-container {
+        .eddy-container {
             width: 400px;
-            background: #34495e;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            background: linear-gradient(145deg, #001f3f, #003366);
+            border-radius: 15px;
+            border: 2px solid #00f7ff;
+            box-shadow: 0 0 30px rgba(0, 247, 255, 0.3);
         }
 
-        .bot-face {
-            position: relative;
-            width: 200px;
-            height: 200px;
+        .holographic-face {
+            width: 250px;
+            height: 250px;
             margin: 20px auto;
-            background: #ecf0f1;
+            position: relative;
+            background: radial-gradient(circle, #002b55 0%, #000 70%);
             border-radius: 50%;
-            border: 5px solid #2c3e50;
+            border: 2px solid #00f7ff;
         }
 
-        .eye {
-            position: absolute;
-            width: 30px;
-            height: 40px;
-            background: #2c3e50;
-            border-radius: 50%;
-            top: 60px;
-            animation: blink 4s infinite;
-        }
-
-        .left-eye { left: 40px; }
-        .right-eye { right: 40px; }
-
-        .eyelid {
+        .grid-lines {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: #ecf0f1;
-            transition: all 0.2s;
+            background-image: 
+                linear-gradient(rgba(0, 247, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 247, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .eyes {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 40px;
+        }
+
+        .eye {
+            width: 30px;
+            height: 50px;
+            background: #00f7ff;
+            border-radius: 15px;
+            animation: blink 5s infinite;
+            box-shadow: 0 0 15px #00f7ff;
         }
 
         .mouth {
             position: absolute;
-            width: 80px;
-            height: 30px;
-            background: #2c3e50;
-            bottom: 50px;
+            bottom: 30%;
             left: 50%;
             transform: translateX(-50%);
+            width: 80px;
+            height: 20px;
+            background: #00f7ff;
             border-radius: 0 0 40px 40px;
             transition: all 0.3s;
+            box-shadow: 0 0 15px #00f7ff;
+        }
+
+        .chat-container {
+            padding: 20px;
         }
 
         .chat-box {
-            height: 300px;
-            padding: 20px;
-            background: #2c3e50;
+            height: 200px;
+            border: 1px solid #00f7ff;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 10px;
             overflow-y: auto;
+            background: rgba(0, 0, 0, 0.7);
         }
 
         .message {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            color: white;
-            max-width: 70%;
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 15px;
+            color: #00f7ff;
+            max-width: 80%;
+            border: 1px solid #00f7ff;
+            background: rgba(0, 247, 255, 0.1);
         }
 
-        .user-message { background: #3498db; margin-left: auto; }
-        .bot-message { background: #27ae60; }
+        .user-message {
+            margin-left: auto;
+            background: rgba(0, 120, 255, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #00f7ff;
+            color: #00f7ff;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #00f7ff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
         @keyframes blink {
-            0%, 90%, 100% { height: 40px; }
-            92%, 98% { height: 5px; }
+            0%, 90%, 100% { height: 50px; }
+            92%, 98% { height: 10px; }
         }
 
-        .head-top {
-            position: absolute;
-            width: 60px;
-            height: 30px;
-            background: #ecf0f1;
-            top: -35px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 10px 10px 0 0;
-        }
-
-        .antenna {
-            position: absolute;
-            width: 4px;
-            height: 30px;
-            background: #2c3e50;
-            top: -60px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .input-container {
-            padding: 20px;
-            background: #34495e;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background: #ecf0f1;
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
         }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="bot-face">
-            <div class="antenna"></div>
-            <div class="head-top"></div>
-            <div class="eye left-eye">
-                <div class="eyelid"></div>
-            </div>
-            <div class="eye right-eye">
-                <div class="eyelid"></div>
+    <div class="eddy-container">
+        <div class="holographic-face">
+            <div class="grid-lines"></div>
+            <div class="eyes">
+                <div class="eye"></div>
+                <div class="eye"></div>
             </div>
             <div class="mouth"></div>
         </div>
-        <div class="chat-box" id="chatBox"></div>
-        <div class="input-container">
-            <input type="text" id="userInput" placeholder="Type your message...">
+        <div class="chat-container">
+            <div class="chat-box" id="chatBox"></div>
+            <div class="controls">
+                <input type="text" id="userInput" placeholder="Speak or type...">
+                <button onclick="startRecognition()">🎤</button>
+            </div>
         </div>
     </div>
 
     <script>
         const mouth = document.querySelector('.mouth');
-        const eyelids = document.querySelectorAll('.eyelid');
         const chatBox = document.getElementById('chatBox');
         const userInput = document.getElementById('userInput');
+        let recognition;
 
-        // Facial expressions
-        const expressions = {
-            neutral: () => {
-                mouth.style.height = '30px';
-                mouth.style.borderRadius = '0 0 40px 40px';
-            },
-            happy: () => {
-                mouth.style.height = '40px';
-                mouth.style.borderRadius = '0 0 80px 80px';
-            },
-            surprised: () => {
-                mouth.style.height = '50px';
-                mouth.style.borderRadius = '50%';
-            },
-            blink: () => {
-                eyelids.forEach(lid => lid.style.height = '5px');
-                setTimeout(() => {
-                    eyelids.forEach(lid => lid.style.height = '100%');
-                }, 200);
+        // Speech recognition setup
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+                handleInput();
+            };
+        }
+
+        function startRecognition() {
+            if (recognition) {
+                recognition.start();
+                animateMouth('listening');
             }
-        };
+        }
 
-        // Chat functionality
+        function animateMouth(state) {
+            switch(state) {
+                case 'speaking':
+                    mouth.style.height = '15px';
+                    mouth.style.borderRadius = '20px';
+                    break;
+                case 'listening':
+                    mouth.style.height = '25px';
+                    mouth.style.borderRadius = '50%';
+                    break;
+                default:
+                    mouth.style.height = '20px';
+                    mouth.style.borderRadius = '0 0 40px 40px';
+            }
+        }
+
         function addMessage(text, isUser) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', isUser ? 'user-message' : 'bot-message');
-            messageDiv.textContent = text;
-            chatBox.appendChild(messageDiv);
+            const message = document.createElement('div');
+            message.className = `message ${isUser ? 'user-message' : ''}`;
+            message.textContent = text;
+            chatBox.appendChild(message);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function handleUserInput() {
-            const message = userInput.value.trim();
-            if (!message) return;
+        function handleInput() {
+            const input = userInput.value.trim();
+            if (!input) return;
 
-            addMessage(message, true);
+            addMessage(input, true);
             userInput.value = '';
-
-            // Show thinking animation
-            expressions.surprised();
+            
+            // Show processing animation
+            animateMouth('speaking');
             setTimeout(() => {
-                expressions.neutral();
-                const response = getBotResponse(message);
-                setTimeout(() => addMessage(response, false), 1000);
-            }, 1500);
+                const response = generateResponse(input);
+                addMessage(response, false);
+                animateMouth('neutral');
+            }, 1000);
         }
 
-        function getBotResponse(message) {
-            const lowerMsg = message.toLowerCase();
-            if (lowerMsg.includes('hello')) return 'Hello! How can I assist you today?';
-            if (lowerMsg.includes('how are you')) return 'I am functioning optimally, thank you!';
-            if (lowerMsg.includes('help')) return 'I can help with general inquiries. Ask away!';
-            return "I'm still learning. Could you rephrase that?";
+        function generateResponse(input) {
+            const lowerInput = input.toLowerCase();
+            if (lowerInput.includes('hello')) return "Eddy here. How can I assist?";
+            if (lowerInput.includes('status')) return "All systems operational";
+            if (lowerInput.includes('joke')) return "Why don't scientists trust atoms? Because they make up everything!";
+            return "Command not recognized. Please rephrase.";
         }
 
-        // Event listeners
+        // Text input handler
         userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleUserInput();
+            if (e.key === 'Enter') handleInput();
         });
-
-        // Random blinking
-        setInterval(() => expressions.blink(), 5000);
     </script>
 </body>
 </html>
