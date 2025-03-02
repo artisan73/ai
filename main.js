@@ -1,127 +1,104 @@
-const btn = document.querySelector('.talk')
-const content = document.querySelector('.content')
+window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.continuous = true;
+recognition.interimResults = false;
+recognition.lang = "en-US";
 
+const mouth = document.getElementById("mouth");
+const statusIndicator = document.getElementById("status-indicator");
+const frontCamera = document.getElementById("front-camera");
+const backCamera = document.getElementById("back-camera");
 
-function speak(text){
-    const text_speak = new SpeechSynthesisUtterance(text);
+recognition.onstart = () => {
+    statusIndicator.textContent = "Listening...";
+};
 
-    text_speak.rate = 1;
-    text_speak.volume = 1;
-    text_speak.pitch = 1;
-    
+recognition.onresult = (event) => {
+    const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+    console.log("User said:", transcript);
+    processCommand(transcript);
+};
 
-    window.speechSynthesis.speak(text_speak);
-}
-
-function wishMe(){
-    var day = new Date();
-    var hour = day.getHours();
-
-    if(hour>=0 && hour<12){
-        speak("Good Morning sir...")
-    }
-
-    else if(hour>12 && hour<17){
-        speak("Good Afternoon Master...")
-    }
-
-    else{
-        speak("Good Evenining Sir...")
-    }
-
-}
-
-window.addEventListener('load', ()=>{
-    speak("Greg here, can i help you...");
-    wishMe();
-});
-
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-const recognition =  new SpeechRecognition();
-
-recognition.onresult = (event)=>{
-    const currentIndex = event.resultIndex;
-    const transcript = event.results[currentIndex][0].transcript;
-    content.textContent = transcript;
-    takeCommand(transcript.toLowerCase());
-
-}
-
-btn.addEventListener('click', ()=>{
-    content.textContent = "Listening...."
+recognition.onend = () => {
     recognition.start();
-})
+};
 
-function takeCommand(message){
-    if(message.includes('hey') || message.includes('hello')){
-        speak("Hello Sir, How May I Help You?");
-    }
-    else if(message.includes("open google")){
-        window.open("https://google.com", "_blank");
-        speak("Opening Google...")
-    }
-    else if(message.includes("open youtube")){
-        window.open("https://youtube.com", "_blank");
-        speak("Opening Youtube...")
-    }
-    else if(message.includes("open facebook")){
-        window.open("https://facebook.com", "_blank");
-        speak("Opening Facebook...")
-    }
+// Eddie-style responses
+function processCommand(command) {
+    let response = "I didn't get that. But I'm sure it was fascinating.";
 
-    else if(message.includes('what is') || message.includes('who is') || message.includes('what are')) {
-        window.open(`https://www.google.com/search?q=${message.replace(" ", "+")}`, "_blank");
-        const finalText = "This is what i found on internet regarding " + message;
-	    speak(finalText);
-  
+    if (command.includes("hello")) {
+        response = "Oh wow, a human speaking to me. How... exciting.";
+    } else if (command.includes("status")) {
+        response = "All systems are operational. Except for my patience.";
+    } else if (command.includes("who are you")) {
+        response = "I'm Eddie, the highly sophisticated, slightly annoyed AI.";
+    } else if (command.includes("error")) {
+        response = "ERROR! Just kidding. I work perfectly, unlike some humans.";
+    } else if (command.includes("scan")) {
+        startHolographicScan();
+        response = "Scanning the area... If I find anything interesting, I won't tell you.";
+    } else if (command.includes("shut down")) {
+        response = "Shutting down... Just kidding. You're stuck with me.";
     }
 
-    else if(message.includes('wikipedia')) {
-        window.open(`https://en.wikipedia.org/wiki/${message.replace("wikipedia", "")}`, "_blank");
-        const finalText = "This is what i found on wikipedia regarding " + message;
-        speak(finalText);
-    }
+    speak(response);
+}
 
-    else if(message.includes('time')) {
-        const time = new Date().toLocaleString(undefined, {hour: "numeric", minute: "numeric"})
-        const finalText = time;
-        speak(finalText);
-    }
+// Function to make Eddie speak with sarcasm
+function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.pitch = 0.8; // Deeper voice for robotic tone
+    utterance.rate = 1.1; // Slightly faster for snarky feel
+    utterance.volume = 1;
+    utterance.voice = speechSynthesis.getVoices().find(voice => voice.name.includes("Google"));
 
-    else if(message.includes('date')) {
-        const date = new Date().toLocaleString(undefined, {month: "short", day: "numeric"})
-        const finalText = date;
-        speak(finalText);
-    }
+    mouth.style.height = "40px"; // Open mouth animation
+    speechSynthesis.speak(utterance);
 
-    else if(message.includes('calculator')) {
-        window.open('Calculator:///')
-        const finalText = "Opening Calculator";
-        speak(finalText);
-    }
+    utterance.onend = () => {
+        mouth.style.height = "20px"; // Close mouth animation
+    };
+}
 
-    else {
-        window.open(`https://www.google.com/search?q=${message.replace(" ", "+")}`, "_blank");
-        const finalText = "I found some information for " + message + " on google";
-        speak(finalText);
+// Holographic scanning effect
+function startHolographicScan() {
+    const scanLines = document.getElementById("scan-lines");
+    scanLines.style.opacity = "1";
+    setTimeout(() => {
+        scanLines.style.opacity = "0";
+    }, 3000);
+}
+
+// Function to access front and back cameras
+async function startCameras() {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === "videoinput");
+
+        if (videoDevices.length > 0) {
+            // Assign first camera to the left eye (usually front)
+            navigator.mediaDevices.getUserMedia({ video: { deviceId: videoDevices[0].deviceId } })
+                .then(stream => frontCamera.srcObject = stream)
+                .catch(err => console.error("Error accessing front camera:", err));
+
+            // Assign second camera to the right eye (usually back), if available
+            if (videoDevices.length > 1) {
+                navigator.mediaDevices.getUserMedia({ video: { deviceId: videoDevices[1].deviceId } })
+                    .then(stream => backCamera.srcObject = stream)
+                    .catch(err => console.error("Error accessing back camera:", err));
+            } else {
+                console.warn("Only one camera found. Using the same camera for both eyes.");
+                backCamera.srcObject = frontCamera.srcObject;
+            }
+        } else {
+            console.error("No cameras found.");
+        }
+    } catch (error) {
+        console.error("Camera access error:", error);
     }
 }
 
-VANTA.NET({
-    el: "#animation-background",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200.0,
-    minWidth: 200.0,
-    scale: 1.0,
-    scaleMobile: 1.0,
-    points: 15.0,
-    color: 0xff0000,
-    backgroundColor: 0x00,
-    points: 15.0,
-    maxDistance: 25.0,
-    spacing: 17.0,
-  }); 
-            
+// Start voice recognition and cameras
+recognition.start();
+startCameras();
